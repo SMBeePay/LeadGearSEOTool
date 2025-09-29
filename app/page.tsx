@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badg
 import { formatDate } from "@/lib/utils";
 import { OnPageSEOChecker } from "@/components/OnPageSEOChecker";
 import { SEODomainDashboard } from "@/components/SEODomainDashboard";
+import { AIReadinessDashboard } from "@/components/AIReadinessDashboard";
 
 // Client data types with service tiers
 interface Client {
@@ -736,6 +737,7 @@ export default function SEODashboard() {
   
   // Client Detail View State
   const [viewingClientDetail, setViewingClientDetail] = useState<Client | null>(null);
+  const [viewingAIReadiness, setViewingAIReadiness] = useState<Client | null>(null);
 
   useEffect(() => {
     // Simulate loading with real Lead Gear data
@@ -796,8 +798,13 @@ export default function SEODashboard() {
     setViewingClientDetail(client);
   };
 
+  const handleViewAIReadiness = (client: Client) => {
+    setViewingAIReadiness(client);
+  };
+
   const handleBackToDashboard = () => {
     setViewingClientDetail(null);
+    setViewingAIReadiness(null);
   };
 
   const handleTaskAction = (taskId: string, action: "approve" | "reject") => {
@@ -817,6 +824,38 @@ export default function SEODashboard() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading SEO Dashboard...</p>
         </div>
+      </div>
+    );
+  }
+
+  // If viewing AI readiness, show the AI readiness dashboard
+  if (viewingAIReadiness) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Lead Gear SEO Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                AI Readiness Analysis Tool
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm">
+                🔄 Refresh Data
+              </Button>
+              <Button variant="outline" size="sm">
+                📊 Generate Report
+              </Button>
+            </div>
+          </div>
+        </header>
+        <main className="p-6">
+          <AIReadinessDashboard 
+            client={viewingAIReadiness}
+            onBack={handleBackToDashboard}
+          />
+        </main>
       </div>
     );
   }
@@ -1224,21 +1263,31 @@ export default function SEODashboard() {
                         <div className="text-xs text-gray-500 mb-2">
                           Next Audit: {client.nextAuditDate ? formatDate(client.nextAuditDate) : "TBD"}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={() => handleViewClientDetails(client)}
+                            >
+                              View Details
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => handleTriggerAudit(client.id)}
+                            >
+                              Run Audit
+                            </Button>
+                          </div>
                           <Button 
                             size="sm" 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => handleViewClientDetails(client)}
+                            variant="outline"
+                            className="w-full bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 text-purple-700 hover:from-purple-100 hover:to-blue-100"
+                            onClick={() => handleViewAIReadiness(client)}
                           >
-                            View Details
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            className="flex-1"
-                            onClick={() => handleTriggerAudit(client.id)}
-                          >
-                            Run Audit
+                            🤖 AI Readiness Check
                           </Button>
                         </div>
                       </div>
