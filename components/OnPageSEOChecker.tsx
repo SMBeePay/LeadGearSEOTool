@@ -158,6 +158,14 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
           <p className="text-sm text-gray-500">Comprehensive on-page SEO analysis and optimization recommendations</p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            size="sm"
+            onClick={() => setShowAddAnalysis(true)}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            🔍 Run Quick Audit
+          </Button>
           <select 
             className="px-3 py-2 border border-gray-300 rounded-md text-sm"
             value={selectedClient?.id || ""}
@@ -217,8 +225,8 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
       {showAddAnalysis && (
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
-            <CardTitle>Add New Analysis</CardTitle>
-            <CardDescription>Enter a URL and target keyword to analyze</CardDescription>
+            <CardTitle>Run On-Page SEO Audit</CardTitle>
+            <CardDescription>Enter a URL and target keyword to get comprehensive SEO analysis from DataForSEO</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -250,7 +258,7 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
                 onClick={handleRunNewAnalysis}
                 disabled={!newAnalysisUrl || !newAnalysisKeyword || isLoading}
               >
-                {isLoading ? "Analyzing..." : "Run Analysis"}
+                {isLoading ? "Running Audit..." : "Run Audit"}
               </Button>
               <Button 
                 variant="outline" 
@@ -753,9 +761,18 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
         <Card>
           <CardContent className="p-12 text-center">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a Client</h3>
-            <p className="text-gray-600 mb-6">Choose a client from the dropdown above to view their on-page SEO analysis</p>
-            <p className="text-sm text-gray-500">Note: Legacy tier clients have limited on-page SEO features</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">On-Page SEO Analyzer</h3>
+            <p className="text-gray-600 mb-6">Run comprehensive SEO audits to analyze page optimization and get actionable recommendations</p>
+            <div className="space-y-4">
+              <Button 
+                onClick={() => setShowAddAnalysis(true)}
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+              >
+                🚀 Start New Audit
+              </Button>
+              <p className="text-sm text-gray-500">Or select a client above to view saved analyses</p>
+            </div>
           </CardContent>
         </Card>
       )}
