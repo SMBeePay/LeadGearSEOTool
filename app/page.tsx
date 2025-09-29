@@ -900,7 +900,7 @@ export default function SEODashboard() {
                   <span className="text-2xl">👥</span>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.totalClients}</div>
+                  <div className="text-2xl font-bold mb-1">{analytics.totalClients}</div>
                   <p className="text-xs text-gray-500">Active clients in system</p>
                 </CardContent>
               </Card>
@@ -911,7 +911,7 @@ export default function SEODashboard() {
                   <span className="text-2xl">📊</span>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.activeAudits}</div>
+                  <div className="text-2xl font-bold mb-1">{analytics.activeAudits}</div>
                   <p className="text-xs text-gray-500">Audits in progress</p>
                 </CardContent>
               </Card>
@@ -922,7 +922,7 @@ export default function SEODashboard() {
                   <span className="text-2xl">⚠️</span>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.pendingTasks}</div>
+                  <div className="text-2xl font-bold mb-1">{analytics.pendingTasks}</div>
                   <p className="text-xs text-gray-500">Tasks awaiting approval</p>
                 </CardContent>
               </Card>
@@ -933,7 +933,7 @@ export default function SEODashboard() {
                   <span className="text-2xl">✅</span>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.completedTasksThisMonth}</div>
+                  <div className="text-2xl font-bold mb-1">{analytics.completedTasksThisMonth}</div>
                   <p className="text-xs text-gray-500">Tasks completed in December</p>
                 </CardContent>
               </Card>
@@ -944,7 +944,7 @@ export default function SEODashboard() {
                   <span className="text-2xl">📈</span>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.averageAuditScore}/100</div>
+                  <div className="text-2xl font-bold mb-1">{analytics.averageAuditScore}/100</div>
                   <p className="text-xs text-gray-500">Average across all clients</p>
                 </CardContent>
               </Card>
@@ -1159,8 +1159,8 @@ export default function SEODashboard() {
                 { tier: "Legacy", count: leadGearClients.filter(c => c.serviceTier === "Legacy").length, color: "bg-gray-50 border-gray-200", textColor: "text-gray-700" },
               ].map((item) => (
                 <Card key={item.tier} className={item.color}>
-                  <CardContent className="p-4">
-                    <div className={`text-2xl font-bold ${item.textColor}`}>{item.count}</div>
+                  <CardContent className="px-4 py-6">
+                    <div className={`text-2xl font-bold ${item.textColor} mb-1`}>{item.count}</div>
                     <div className="text-sm text-gray-600">{item.tier} Clients</div>
                   </CardContent>
                 </Card>
@@ -1273,28 +1273,28 @@ export default function SEODashboard() {
             {/* Keyword Summary */}
             <div className="grid gap-4 md:grid-cols-4">
               <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-blue-600 mb-1">
                     {leadGearClients.reduce((sum, client) => sum + (client.monthlyKeywords || 0), 0)}
                   </div>
                   <div className="text-sm text-gray-600">Total Keywords</div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">89</div>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-green-600 mb-1">89</div>
                   <div className="text-sm text-gray-600">Top 10 Rankings</div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-yellow-600">234</div>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-yellow-600 mb-1">234</div>
                   <div className="text-sm text-gray-600">Page 1 Rankings</div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-purple-600">156</div>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-purple-600 mb-1">156</div>
                   <div className="text-sm text-gray-600">Improved This Month</div>
                 </CardContent>
               </Card>
@@ -1355,26 +1355,26 @@ export default function SEODashboard() {
             {/* Task Status Summary */}
             <div className="grid gap-4 md:grid-cols-4">
               <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-yellow-600">{tasks.filter(t => t.status === "pending").length}</div>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-yellow-600 mb-1">{tasks.filter(t => t.status === "pending").length}</div>
                   <div className="text-sm text-gray-600">Pending Approval</div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">{tasks.filter(t => t.status === "in-progress").length}</div>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-blue-600 mb-1">{tasks.filter(t => t.status === "in-progress").length}</div>
                   <div className="text-sm text-gray-600">In Progress</div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">{tasks.filter(t => t.status === "completed").length}</div>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-green-600 mb-1">{tasks.filter(t => t.status === "completed").length}</div>
                   <div className="text-sm text-gray-600">Completed</div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-purple-600">{tasks.filter(t => t.aiGenerated).length}</div>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-purple-600 mb-1">{tasks.filter(t => t.aiGenerated).length}</div>
                   <div className="text-sm text-gray-600">AI Generated</div>
                 </CardContent>
               </Card>
