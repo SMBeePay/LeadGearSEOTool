@@ -9,7 +9,7 @@ interface DetailedOptimizationRequest {
 
 interface OptimizationIdea {
   id: string;
-  category: 'Meta Tags' | 'Content' | 'Technical SEO' | 'User Experience' | 'Semantic SEO' | 'Internal Linking';
+  category: 'Meta Tags' | 'Content' | 'Content Optimization' | 'Technical SEO' | 'User Experience' | 'Semantic SEO' | 'Internal Linking' | 'Schema Markup' | 'Long-tail Optimization';
   title: string;
   description: string;
   priority: 'high' | 'medium' | 'low';
@@ -23,12 +23,16 @@ interface OptimizationIdea {
 
 // Mock function to simulate Claude AI analysis
 async function generateClaudeOptimizationIdeas(url: string, keyword: string): Promise<OptimizationIdea[]> {
-  // Simulate API call delay
+  // Simulate comprehensive SEO analysis and idea generation
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   const domain = url.replace(/^https?:\/\//, '').split('/')[0];
+  const isHomepage = url.endsWith('/') || !url.split('/').pop()?.includes('.');
+  const isLongTail = keyword.split(' ').length > 3;
   
-  // Generate realistic optimization ideas based on the URL and keyword
+  console.log(`Generating ${isLongTail ? 'long-tail' : 'short-tail'} optimization ideas for: ${domain}`);
+  
+  // Generate contextual optimization ideas based on page type and keyword
   const ideas: OptimizationIdea[] = [
     {
       id: '1',
@@ -48,9 +52,11 @@ async function generateClaudeOptimizationIdeas(url: string, keyword: string): Pr
     },
     {
       id: '2',
-      category: 'Content',
-      title: 'Add Target Keyword to H1 Tag',
-      description: 'The main heading doesn\'t include the primary target keyword, missing a key SEO opportunity.',
+      category: 'Content Optimization',
+      title: isHomepage ? 'Add Service-Focused H1 with Target Keyword' : 'Optimize H1 Tag for Target Keyword',
+      description: isHomepage 
+        ? 'Homepage H1 should clearly communicate your main service offering while including the target keyword.'
+        : 'The main heading should include the primary target keyword while remaining natural and engaging.',
       priority: 'high',
       difficulty: 'easy',
       currentState: `Current H1: "Welcome to Our Company"`,
@@ -129,8 +135,67 @@ async function generateClaudeOptimizationIdeas(url: string, keyword: string): Pr
       ],
       impact: 'High - Better conversion rates',
       effort: 'Low - 20 minutes to implement'
+    },
+    {
+      id: '7',
+      category: 'Schema Markup',
+      title: isHomepage ? 'Add Organization Schema' : 'Implement Service Schema Markup',
+      description: isHomepage 
+        ? 'Add Organization schema to help search engines understand your business entity.'
+        : 'Add Service schema markup to help search engines better understand your service offerings.',
+      priority: 'high',
+      difficulty: 'medium',
+      currentState: 'No structured data detected on the page',
+      proposedSolution: isHomepage 
+        ? 'Implement Organization schema with business details, contact info, and service areas'
+        : `Add Service schema for "${keyword}" including provider details and service type`,
+      alternatives: [
+        'Include Review/Rating schema from testimonials',
+        'Add FAQ schema for question sections',
+        'Consider LocalBusiness schema for local services'
+      ],
+      impact: 'High - Enhanced SERP features and better search engine understanding',
+      effort: 'Medium - 1-2 hours implementation and testing'
+    },
+    {
+      id: '8',
+      category: 'Technical SEO',
+      title: 'Optimize Core Web Vitals',
+      description: 'Improve page experience metrics that are now ranking factors.',
+      priority: 'high',
+      difficulty: 'hard',
+      currentState: 'LCP: 3.8s, FID: 180ms, CLS: 0.15 (needs improvement)',
+      proposedSolution: 'Optimize images, eliminate render-blocking resources, and minimize layout shift',
+      alternatives: [
+        'Implement lazy loading for images',
+        'Use WebP format and optimize image sizes',
+        'Minify CSS and JavaScript files'
+      ],
+      impact: 'High - Direct ranking factor and user experience improvement',
+      effort: 'High - 3-4 hours technical optimization'
     }
   ];
+
+  // Add keyword-specific optimization based on analysis
+  if (isLongTail) {
+    ideas.push({
+      id: '9',
+      category: 'Long-tail Optimization',
+      title: 'Create Comprehensive FAQ Section',
+      description: 'Long-tail keywords often represent specific questions - address these directly.',
+      priority: 'high',
+      difficulty: 'medium',
+      currentState: 'No FAQ or question-based content detected',
+      proposedSolution: `Create FAQ section addressing variations of "${keyword}" and related questions`,
+      alternatives: [
+        'Add "How to" guides and tutorials',
+        'Include "What is" explanatory content',
+        'Address common pain points and solutions'
+      ],
+      impact: 'High - Better long-tail coverage and featured snippet opportunities',
+      effort: 'Medium - 2-3 hours content research and creation'
+    });
+  }
 
   return ideas;
 }
