@@ -1307,7 +1307,7 @@ export default function SEODashboard() {
 
             {/* Add New Client Modal */}
             {showAddClientModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="fixed inset-0 bg-gradient-to-br from-gray-900/40 via-gray-800/30 to-gray-900/40 flex items-center justify-center z-50">
                 <Card className="w-full max-w-md bg-white">
                   <CardHeader>
                     <CardTitle>Add New Client</CardTitle>
