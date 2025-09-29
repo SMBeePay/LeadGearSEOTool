@@ -30,6 +30,8 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
   const [newAnalysisUrl, setNewAnalysisUrl] = useState("");
   const [newAnalysisKeyword, setNewAnalysisKeyword] = useState("");
   const [showAddAnalysis, setShowAddAnalysis] = useState(false);
+  const [expandedAnalysis, setExpandedAnalysis] = useState<string | null>(null);
+  const [detailedIdeas, setDetailedIdeas] = useState<Record<string, any[]>>({});
 
   const {
     analyses,
@@ -61,6 +63,50 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
 
   const handleRerunAnalysis = async (analysis: OnPageAnalysis) => {
     await runAnalysis(analysis.url, analysis.keyword);
+  };
+
+  const loadDetailedIdeas = async (analysisId: string, url: string, keyword: string) => {
+    if (detailedIdeas[analysisId]) {
+      return; // Already loaded
+    }
+
+    try {
+      const response = await fetch('/api/detailed-optimization-ideas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url,
+          keyword,
+          location: 'Dallas, Texas, United States',
+          language: 'en'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load detailed ideas');
+      }
+
+      const ideas = await response.json();
+      setDetailedIdeas(prev => ({
+        ...prev,
+        [analysisId]: ideas
+      }));
+    } catch (err) {
+      console.error('Failed to load detailed ideas:', err);
+    }
+  };
+
+  const toggleAnalysisExpansion = (analysis: OnPageAnalysis) => {
+    const analysisId = analysis.id || `${analysis.url}-${analysis.keyword}`;
+    
+    if (expandedAnalysis === analysisId) {
+      setExpandedAnalysis(null);
+    } else {
+      setExpandedAnalysis(analysisId);
+      loadDetailedIdeas(analysisId, analysis.url, analysis.keyword);
+    }
   };
 
   const getTierBadgeVariant = (tier: Client["serviceTier"]) => {
@@ -366,55 +412,154 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
                         </Button>
                       </div>
                     ) : (
-                      analyses.map((analysis, index) => (
-                        <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-3 h-8 rounded ${
-                              analysis.position <= 10 ? 'bg-green-500' : 
-                              analysis.position <= 30 ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}></div>
-                            <div className="flex-1">
-                              <div className="font-medium text-blue-600 hover:underline cursor-pointer mb-1">
-                                {analysis.url}
+                      analyses.map((analysis, index) => {
+                        const analysisId = analysis.id || `${analysis.url}-${analysis.keyword}`;
+                        const isExpanded = expandedAnalysis === analysisId;
+                        const ideas = detailedIdeas[analysisId] || [];
+                        
+                        return (
+                          <div key={index} className="border rounded-lg">
+                            <div className="flex items-center justify-between p-4">
+                              <div className="flex items-center gap-4">
+                                <div className={`w-3 h-8 rounded ${
+                                  analysis.position <= 10 ? 'bg-green-500' : 
+                                  analysis.position <= 30 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}></div>
+                                <div className="flex-1">
+                                  <div 
+                                    className="font-medium text-blue-600 hover:underline cursor-pointer mb-1"
+                                    onClick={() => toggleAnalysisExpansion(analysis)}
+                                  >
+                                    {analysis.url}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {analysis.keyword} • Position #{analysis.position}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-sm text-gray-500">
-                                {analysis.keyword} • Position #{analysis.position}
+                              <div className="flex items-center gap-6">
+                                <div className="text-center">
+                                  <div className="text-sm text-gray-500">Volume</div>
+                                  <div className="font-medium">{analysis.volume.toLocaleString()}</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-sm text-gray-500">Ideas</div>
+                                  <div 
+                                    className="cursor-pointer"
+                                    onClick={() => toggleAnalysisExpansion(analysis)}
+                                  >
+                                    <Badge variant="default">{analysis.ideas || 0} ideas</Badge>
+                                  </div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-sm text-gray-500">Last Update</div>
+                                  <div className="text-sm">{formatDate(new Date(analysis.lastUpdated || ''))}</div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => toggleAnalysisExpansion(analysis)}
+                                  >
+                                    {isExpanded ? '▲' : '▼'}
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleRerunAnalysis(analysis)}
+                                    disabled={isLoading}
+                                  >
+                                    🔄
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => analysis.id && removeAnalysis(analysis.id)}
+                                  >
+                                    🗑️
+                                  </Button>
+                                </div>
                               </div>
                             </div>
+                            
+                            {isExpanded && (
+                              <div className="border-t bg-gray-50 p-6">
+                                <h4 className="font-semibold text-lg mb-4">Optimization Ideas for {analysis.keyword}</h4>
+                                {ideas.length === 0 ? (
+                                  <div className="text-center py-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                    <p className="text-gray-600">Loading detailed optimization ideas...</p>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-6">
+                                    {ideas.map((idea: any, ideaIndex: number) => (
+                                      <div key={ideaIndex} className="bg-white border rounded-lg p-4">
+                                        <div className="flex items-start justify-between mb-3">
+                                          <div className="flex items-center gap-3">
+                                            <Badge 
+                                              variant={
+                                                idea.priority === "high" ? "destructive" :
+                                                idea.priority === "medium" ? "warning" : "secondary"
+                                              }
+                                              className="text-xs"
+                                            >
+                                              {idea.priority} priority
+                                            </Badge>
+                                            <Badge variant="outline" className="text-xs">
+                                              {idea.category}
+                                            </Badge>
+                                          </div>
+                                          <Badge 
+                                            variant={
+                                              idea.difficulty === "easy" ? "success" :
+                                              idea.difficulty === "medium" ? "warning" : "destructive"
+                                            }
+                                            className="text-xs"
+                                          >
+                                            {idea.difficulty}
+                                          </Badge>
+                                        </div>
+                                        
+                                        <h5 className="font-medium text-gray-900 mb-2">{idea.title}</h5>
+                                        <p className="text-sm text-gray-600 mb-4">{idea.description}</p>
+                                        
+                                        <div className="grid gap-4 md:grid-cols-2">
+                                          <div className="bg-red-50 border border-red-200 rounded p-3">
+                                            <div className="font-medium text-red-800 mb-2">Current State</div>
+                                            <div className="text-sm text-red-700">{idea.currentState}</div>
+                                          </div>
+                                          <div className="bg-green-50 border border-green-200 rounded p-3">
+                                            <div className="font-medium text-green-800 mb-2">Proposed Solution</div>
+                                            <div className="text-sm text-green-700">{idea.proposedSolution}</div>
+                                          </div>
+                                        </div>
+                                        
+                                        {idea.alternatives && idea.alternatives.length > 0 && (
+                                          <div className="mt-4">
+                                            <div className="font-medium text-gray-900 mb-2">Alternative Options:</div>
+                                            <div className="space-y-2">
+                                              {idea.alternatives.map((alt: string, altIndex: number) => (
+                                                <div key={altIndex} className="bg-blue-50 border border-blue-200 rounded p-2">
+                                                  <div className="text-sm text-blue-700">{alt}</div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                        
+                                        <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+                                          <span>Impact: {idea.impact}</span>
+                                          <span>Effort: {idea.effort}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <div className="flex items-center gap-6">
-                            <div className="text-center">
-                              <div className="text-sm text-gray-500">Volume</div>
-                              <div className="font-medium">{analysis.volume.toLocaleString()}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm text-gray-500">Ideas</div>
-                              <Badge variant="default">{analysis.ideas || 0} ideas</Badge>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm text-gray-500">Last Update</div>
-                              <div className="text-sm">{formatDate(new Date(analysis.lastUpdated || ''))}</div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleRerunAnalysis(analysis)}
-                                disabled={isLoading}
-                              >
-                                🔄
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => analysis.id && removeAnalysis(analysis.id)}
-                              >
-                                🗑️
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </CardContent>
