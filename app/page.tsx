@@ -694,6 +694,16 @@ export default function SEODashboard() {
   // Client Detail View State
   const [viewingClientDetail, setViewingClientDetail] = useState<Client | null>(null);
   const [viewingAIReadiness, setViewingAIReadiness] = useState<Client | null>(null);
+  
+  // Add New Client Modal State
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [newClientForm, setNewClientForm] = useState({
+    name: "",
+    website: "",
+    industry: "",
+    serviceTier: "Starter" as Client["serviceTier"],
+    status: "active" as Client["status"]
+  });
 
   useEffect(() => {
     // Simulate loading with real Lead Gear data
@@ -745,6 +755,48 @@ export default function SEODashboard() {
     completed: "success",
     rejected: "destructive",
   } as const;
+
+  // Add New Client Handlers
+  const handleAddClient = () => {
+    if (!newClientForm.name || !newClientForm.website || !newClientForm.industry) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    const newClient: Client = {
+      id: `client-${Date.now()}`,
+      name: newClientForm.name,
+      website: newClientForm.website.startsWith('http') ? newClientForm.website : `https://${newClientForm.website}`,
+      industry: newClientForm.industry,
+      serviceTier: newClientForm.serviceTier,
+      status: newClientForm.status,
+      lastAuditScore: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
+      monthlyKeywords: Math.floor(Math.random() * 500) + 100, // Random keywords 100-600
+      lastAuditDate: new Date(),
+      nextAuditDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+    };
+
+    setClients(prev => [newClient, ...prev]);
+    setShowAddClientModal(false);
+    setNewClientForm({
+      name: "",
+      website: "",
+      industry: "",
+      serviceTier: "Starter",
+      status: "active"
+    });
+  };
+
+  const handleCloseModal = () => {
+    setShowAddClientModal(false);
+    setNewClientForm({
+      name: "",
+      website: "",
+      industry: "",
+      serviceTier: "Starter",
+      status: "active"
+    });
+  };
 
   const handleTriggerAudit = (clientId: string) => {
     alert(`Triggering audit for client: ${clientId}`);
@@ -1146,7 +1198,7 @@ export default function SEODashboard() {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">Filter by Tier</Button>
                 <Button variant="outline" size="sm">Export List</Button>
-                <Button size="sm">Add New Client</Button>
+                <Button size="sm" onClick={() => setShowAddClientModal(true)}>Add New Client</Button>
               </div>
             </div>
 
@@ -1252,6 +1304,104 @@ export default function SEODashboard() {
                 </Card>
               ))}
             </div>
+
+            {/* Add New Client Modal */}
+            {showAddClientModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <Card className="w-full max-w-md bg-white">
+                  <CardHeader>
+                    <CardTitle>Add New Client</CardTitle>
+                    <CardDescription>Enter the details for the new client</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Client Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={newClientForm.name}
+                        onChange={(e) => setNewClientForm(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter client name"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Website URL *
+                      </label>
+                      <input
+                        type="url"
+                        value={newClientForm.website}
+                        onChange={(e) => setNewClientForm(prev => ({ ...prev, website: e.target.value }))}
+                        placeholder="https://example.com"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Industry *
+                      </label>
+                      <input
+                        type="text"
+                        value={newClientForm.industry}
+                        onChange={(e) => setNewClientForm(prev => ({ ...prev, industry: e.target.value }))}
+                        placeholder="e.g., Technology, Healthcare, Finance"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Service Tier
+                      </label>
+                      <select
+                        value={newClientForm.serviceTier}
+                        onChange={(e) => setNewClientForm(prev => ({ ...prev, serviceTier: e.target.value as Client["serviceTier"] }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="Starter">Starter</option>
+                        <option value="Business">Business</option>
+                        <option value="Pro">Pro</option>
+                        <option value="Legacy">Legacy</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={newClientForm.status}
+                        onChange={(e) => setNewClientForm(prev => ({ ...prev, status: e.target.value as Client["status"] }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                    
+                    <div className="flex gap-2 pt-4">
+                      <Button 
+                        onClick={handleAddClient}
+                        className="flex-1"
+                      >
+                        Add Client
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleCloseModal}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         )}
 
