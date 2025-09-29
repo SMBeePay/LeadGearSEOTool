@@ -136,7 +136,7 @@ async function generateClaudeOptimizationIdeas(url: string, keyword: string): Pr
 }
 
 // Function to simulate DataForSEO page analysis
-async function analyzePageWithDataForSEO(url: string, keyword: string) {
+async function analyzePageWithDataForSEO(url: string) {
   // This would make real DataForSEO API calls for:
   // - On-page analysis
   // - Content analysis
@@ -171,14 +171,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Analyze the page with DataForSEO (simulated)
-    const pageAnalysis = await analyzePageWithDataForSEO(body.url, body.keyword);
+    await analyzePageWithDataForSEO(body.url);
     
     // Generate Claude AI optimization ideas
     const optimizationIdeas = await generateClaudeOptimizationIdeas(body.url, body.keyword);
     
     return NextResponse.json(optimizationIdeas);
-  } catch (error) {
-    console.error('Error generating optimization ideas:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to generate optimization ideas' },
       { status: 500 }
@@ -201,7 +200,7 @@ export async function GET(request: NextRequest) {
   try {
     const optimizationIdeas = await generateClaudeOptimizationIdeas(url, keyword);
     return NextResponse.json(optimizationIdeas);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to retrieve optimization ideas' },
       { status: 500 }

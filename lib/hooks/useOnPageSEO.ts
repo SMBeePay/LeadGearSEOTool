@@ -110,9 +110,9 @@ export function useOnPageSEO(clientId: string | null) {
   }, [clientId]);
 
   const generateMockIdeas = (url: string, keyword: string, volume: number): OnPageIdea[] => {
-    const categories: OnPageIdea['category'][] = [
-      "Content", "Semantic", "Backlinks", "Technical SEO", "SERP Features"
-    ];
+    // const categories: OnPageIdea['category'][] = [
+    //   "Content", "Semantic", "Backlinks", "Technical SEO", "SERP Features"
+    // ];
     
     const ideaTemplates: Array<{
       category: OnPageIdea['category'];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Progress } from "@/components/ui/simple-components";
 import { formatDate } from "@/lib/utils";
 
@@ -64,11 +64,7 @@ export function AIReadinessDashboard({ client, onBack }: AIReadinessDashboardPro
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadAIReadinessAnalysis();
-  }, [client]);
-
-  const loadAIReadinessAnalysis = async () => {
+  const loadAIReadinessAnalysis = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -96,7 +92,11 @@ export function AIReadinessDashboard({ client, onBack }: AIReadinessDashboardPro
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [client.website]);
+
+  useEffect(() => {
+    loadAIReadinessAnalysis();
+  }, [loadAIReadinessAnalysis]);
 
   const getReadinessLevelColor = (level: AIReadinessResult['aiReadinessLevel']) => {
     switch (level) {

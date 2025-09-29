@@ -166,7 +166,7 @@ async function analyzeStructuredData(url: string): Promise<AIReadinessScore> {
 }
 
 // Analyze content for AI consumption
-async function analyzeAIContentReadiness(url: string): Promise<AIReadinessScore> {
+async function analyzeAIContentReadiness(): Promise<AIReadinessScore> {
   const issues: AIIssue[] = [];
   const recommendations: AIRecommendation[] = [];
   let score = 0;
@@ -275,14 +275,14 @@ async function analyzeVoiceSearchReadiness(url: string, keyword?: string): Promi
   // Check for conversational keywords using DataForSEO AI search volume data
   if (keyword) {
     try {
-      // This would use the actual DataForSEO API
-      const conversationalKeywords = [
-        `how to ${keyword}`,
-        `what is ${keyword}`,
-        `why ${keyword}`,
-        `when to ${keyword}`,
-        `where to find ${keyword}`
-      ];
+      // This would use the actual DataForSEO API to check conversational keywords
+      // const conversationalKeywords = [
+      //   `how to ${keyword}`,
+      //   `what is ${keyword}`,
+      //   `why ${keyword}`,
+      //   `when to ${keyword}`,
+      //   `where to find ${keyword}`
+      // ];
 
       // Simulate AI search volume check
       score += 5; // Bonus for having target keyword
@@ -363,7 +363,7 @@ async function analyzeVoiceSearchReadiness(url: string, keyword?: string): Promi
 }
 
 // Analyze entity and authority signals
-async function analyzeEntityAuthority(url: string): Promise<AIReadinessScore> {
+async function analyzeEntityAuthority(): Promise<AIReadinessScore> {
   const issues: AIIssue[] = [];
   const recommendations: AIRecommendation[] = [];
   let score = 0;
@@ -440,9 +440,9 @@ async function performAIReadinessAnalysis(request: AIReadinessRequest): Promise<
   // Perform all analyses in parallel
   const [structuredDataScore, contentScore, voiceSearchScore, entityScore] = await Promise.all([
     analyzeStructuredData(url),
-    analyzeAIContentReadiness(url),
+    analyzeAIContentReadiness(),
     analyzeVoiceSearchReadiness(url),
-    analyzeEntityAuthority(url)
+    analyzeEntityAuthority()
   ]);
 
   const categories = [structuredDataScore, contentScore, voiceSearchScore, entityScore];
@@ -528,7 +528,7 @@ export async function GET(request: NextRequest) {
   try {
     const analysis = await performAIReadinessAnalysis({ url });
     return NextResponse.json(analysis);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to retrieve AI readiness analysis' },
       { status: 500 }

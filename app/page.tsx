@@ -21,51 +21,7 @@ interface Client {
   nextAuditDate?: Date;
 }
 
-// On-Page SEO Types
-interface OnPageIdea {
-  id: string;
-  category: "Strategy" | "SERP Features" | "Backlinks" | "Semantic" | "Content" | "User Experience" | "Technical SEO";
-  title: string;
-  description: string;
-  priority: "high" | "medium" | "low";
-  page: string;
-  keywords: string[];
-  volume: number;
-  status: "pending" | "in-progress" | "completed";
-  difficulty: "easy" | "medium" | "hard";
-}
-
-interface OnPageAnalysis {
-  url: string;
-  keyword: string;
-  volume: number;
-  position: number;
-  benchmarks: {
-    contentLength: { topAvg: number; yourPage: number; status: "good" | "warning" | "error" };
-    referringDomains: { topAvg: number; yourPage: number; status: "good" | "warning" | "error" };
-    videoUsage: { topAvg: string; yourPage: string; status: "good" | "warning" | "error" };
-    keywordUsage: { topAvg: string; yourPage: string; status: "good" | "warning" | "error" };
-    orderedList: { topAvg: string; yourPage: string; status: "good" | "warning" | "error" };
-    markups: { topAvg: string; yourPage: string; status: "good" | "warning" | "error" };
-    readability: { topAvg: number; yourPage: number; status: "good" | "warning" | "error" };
-  };
-}
-
-interface OnPageOverview {
-  totalIdeas: number;
-  categoryBreakdown: Record<string, number>;
-  trafficPotential: {
-    current: number;
-    potential: number;
-    improvement: string;
-  };
-  topPages: Array<{
-    url: string;
-    priority: "high" | "medium" | "low";
-    volume: number;
-    ideas: number;
-  }>;
-}
+// These interfaces are used by imported components
 
 interface Task {
   id: string;

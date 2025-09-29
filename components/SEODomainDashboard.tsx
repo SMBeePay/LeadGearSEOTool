@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Progress } from "@/components/ui/simple-components";
 import { formatDate } from "@/lib/utils";
 
@@ -108,11 +108,7 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadDomainAnalysis();
-  }, [client]);
-
-  const loadDomainAnalysis = async () => {
+  const loadDomainAnalysis = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -140,7 +136,11 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [client.website]);
+
+  useEffect(() => {
+    loadDomainAnalysis();
+  }, [loadDomainAnalysis]);
 
   const getTierBadgeVariant = (tier: Client["serviceTier"]) => {
     switch (tier) {

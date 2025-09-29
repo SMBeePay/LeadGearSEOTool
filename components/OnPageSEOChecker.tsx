@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Progress } from "@/components/ui/simple-components";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge } from "@/components/ui/simple-components";
 import { formatDate } from "@/lib/utils";
 import { useOnPageSEO, OnPageAnalysis } from "@/lib/hooks/useOnPageSEO";
 
@@ -31,7 +31,21 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
   const [newAnalysisKeyword, setNewAnalysisKeyword] = useState("");
   const [showAddAnalysis, setShowAddAnalysis] = useState(false);
   const [expandedAnalysis, setExpandedAnalysis] = useState<string | null>(null);
-  const [detailedIdeas, setDetailedIdeas] = useState<Record<string, any[]>>({});
+  interface DetailedIdea {
+    id: string;
+    category: string;
+    title: string;
+    description: string;
+    priority: 'high' | 'medium' | 'low';
+    difficulty: 'easy' | 'medium' | 'hard';
+    currentState: string;
+    proposedSolution: string;
+    alternatives?: string[];
+    impact: string;
+    effort: string;
+  }
+
+  const [detailedIdeas, setDetailedIdeas] = useState<Record<string, DetailedIdea[]>>({});
 
   const {
     analyses,
@@ -492,7 +506,7 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
                                   </div>
                                 ) : (
                                   <div className="space-y-6">
-                                    {ideas.map((idea: any, ideaIndex: number) => (
+                                    {ideas.map((idea: DetailedIdea, ideaIndex: number) => (
                                       <div key={ideaIndex} className="bg-white border rounded-lg p-4">
                                         <div className="flex items-start justify-between mb-3">
                                           <div className="flex items-center gap-3">
@@ -712,7 +726,7 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
                                 <div className="text-sm text-gray-500">Status</div>
                                 <select
                                   value={idea.status}
-                                  onChange={(e) => updateIdeaStatus(idea.id, e.target.value as any)}
+                                  onChange={(e) => updateIdeaStatus(idea.id, e.target.value as "pending" | "in-progress" | "completed")}
                                   className="text-xs px-2 py-1 border rounded"
                                 >
                                   <option value="pending">To Do</option>

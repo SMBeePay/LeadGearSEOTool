@@ -96,7 +96,7 @@ function generateMockTrafficData(domain: string): TrafficData {
     trafficValue: Math.floor(baseTraffic * (Math.random() * 3 + 1)),
     organicKeywords: Math.floor(Math.random() * 5000) + 500,
     paidKeywords: Math.floor(Math.random() * 200) + 10,
-    monthlyTraffic: months.map((month, index) => ({
+    monthlyTraffic: months.map((month) => ({
       month,
       traffic: Math.floor(baseTraffic * (0.8 + Math.random() * 0.4)),
       value: Math.floor(baseTraffic * (0.8 + Math.random() * 0.4) * 2)
@@ -135,7 +135,7 @@ function generateMockKeywords(domain: string): KeywordData[] {
   const domainKey = Object.keys(industries).find(key => domain.includes(key)) || 'default';
   const baseKeywords = industries[domainKey as keyof typeof industries];
   
-  return baseKeywords.map((keyword, index) => ({
+  return baseKeywords.map((keyword) => ({
     keyword,
     position: Math.floor(Math.random() * 50) + 1,
     volume: Math.floor(Math.random() * 10000) + 500,
@@ -148,7 +148,7 @@ function generateMockKeywords(domain: string): KeywordData[] {
   }));
 }
 
-function generateMockCompetitors(domain: string): CompetitorData[] {
+function generateMockCompetitors(): CompetitorData[] {
   const competitors = [
     'competitor1.com',
     'competitor2.com', 
@@ -240,7 +240,7 @@ async function analyzeDomainWithDataForSEO(request: DomainAnalysisRequest): Prom
     domain,
     traffic: generateMockTrafficData(domain),
     keywords: generateMockKeywords(domain),
-    competitors: generateMockCompetitors(domain),
+    competitors: generateMockCompetitors(),
     backlinks: generateMockBacklinks(),
     technicalSEO: generateMockTechnicalSEO(),
     lastUpdated: new Date().toISOString()
@@ -286,7 +286,7 @@ export async function GET(request: NextRequest) {
   try {
     const analysis = await analyzeDomainWithDataForSEO({ domain });
     return NextResponse.json(analysis);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to retrieve domain analysis' },
       { status: 500 }
