@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Progress } from "@/components/ui/simple-components";
 import { formatDate } from "@/lib/utils";
 import { OnPageSEOChecker } from "@/components/OnPageSEOChecker";
+import { SEODomainDashboard } from "@/components/SEODomainDashboard";
 
 // Client data types with service tiers
 interface Client {
@@ -732,6 +733,9 @@ export default function SEODashboard() {
   
   // On-Page SEO Tracker State
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  
+  // Client Detail View State
+  const [viewingClientDetail, setViewingClientDetail] = useState<Client | null>(null);
 
   useEffect(() => {
     // Simulate loading with real Lead Gear data
@@ -788,6 +792,14 @@ export default function SEODashboard() {
     alert(`Triggering audit for client: ${clientId}`);
   };
 
+  const handleViewClientDetails = (client: Client) => {
+    setViewingClientDetail(client);
+  };
+
+  const handleBackToDashboard = () => {
+    setViewingClientDetail(null);
+  };
+
   const handleTaskAction = (taskId: string, action: "approve" | "reject") => {
     setTasks(prev => 
       prev.map(task => 
@@ -805,6 +817,38 @@ export default function SEODashboard() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading SEO Dashboard...</p>
         </div>
+      </div>
+    );
+  }
+
+  // If viewing client details, show the domain dashboard
+  if (viewingClientDetail) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Lead Gear SEO Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                AI-Powered SEO Analysis and Task Management
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm">
+                🔄 Refresh Data
+              </Button>
+              <Button variant="outline" size="sm">
+                📊 Generate Report
+              </Button>
+            </div>
+          </div>
+        </header>
+        <main className="p-6">
+          <SEODomainDashboard 
+            client={viewingClientDetail}
+            onBack={handleBackToDashboard}
+          />
+        </main>
       </div>
     );
   }
@@ -924,7 +968,12 @@ export default function SEODashboard() {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">{client.name}</h3>
+                            <h3 
+                              className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer hover:underline"
+                              onClick={() => handleViewClientDetails(client)}
+                            >
+                              {client.name}
+                            </h3>
                             <Badge variant={getTierBadgeVariant(client.serviceTier)} className="text-xs">
                               {client.serviceTier}
                             </Badge>
@@ -1137,7 +1186,12 @@ export default function SEODashboard() {
                       </Badge>
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{client.name}</CardTitle>
+                      <CardTitle 
+                        className="text-lg text-blue-600 hover:text-blue-800 cursor-pointer hover:underline"
+                        onClick={() => handleViewClientDetails(client)}
+                      >
+                        {client.name}
+                      </CardTitle>
                       <CardDescription className="text-sm">{client.website}</CardDescription>
                     </div>
                   </CardHeader>
@@ -1171,7 +1225,12 @@ export default function SEODashboard() {
                           Next Audit: {client.nextAuditDate ? formatDate(client.nextAuditDate) : "TBD"}
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => handleViewClientDetails(client)}
+                          >
                             View Details
                           </Button>
                           <Button 
