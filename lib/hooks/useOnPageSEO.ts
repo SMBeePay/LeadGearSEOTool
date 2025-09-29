@@ -114,7 +114,11 @@ export function useOnPageSEO(clientId: string | null) {
       "Content", "Semantic", "Backlinks", "Technical SEO", "SERP Features"
     ];
     
-    const ideaTemplates = [
+    const ideaTemplates: Array<{
+      category: OnPageIdea['category'];
+      title: string;
+      description: string;
+    }> = [
       { category: "Content", title: "Expand content length to match top competitors", description: "Add more comprehensive information to reach the average content length of top-ranking pages." },
       { category: "Semantic", title: "Add related keywords and phrases", description: "Include semantically related terms to improve content relevance and topical authority." },
       { category: "Backlinks", title: "Earn more quality backlinks", description: "Increase the number of referring domains to match competitor link profiles." },
@@ -124,19 +128,24 @@ export function useOnPageSEO(clientId: string | null) {
       { category: "Content", title: "Update meta description", description: "Write a more compelling and keyword-optimized meta description." }
     ];
 
-    return ideaTemplates.slice(0, Math.floor(Math.random() * 5) + 3).map((template, index) => ({
-      id: `${Date.now()}-${index}`,
-      category: template.category,
-      title: template.title,
-      description: template.description,
-      priority: Math.random() > 0.6 ? "high" : Math.random() > 0.3 ? "medium" : "low",
-      page: url,
-      keywords: [keyword],
-      volume,
-      status: "pending",
-      difficulty: Math.random() > 0.5 ? "easy" : Math.random() > 0.5 ? "medium" : "hard",
-      discoveredDate: new Date().toISOString()
-    }));
+    return ideaTemplates.slice(0, Math.floor(Math.random() * 5) + 3).map((template, index) => {
+      const priorities: OnPageIdea['priority'][] = ["high", "medium", "low"];
+      const difficulties: OnPageIdea['difficulty'][] = ["easy", "medium", "hard"];
+      
+      return {
+        id: `${Date.now()}-${index}`,
+        category: template.category,
+        title: template.title,
+        description: template.description,
+        priority: priorities[Math.floor(Math.random() * priorities.length)],
+        page: url,
+        keywords: [keyword],
+        volume,
+        status: "pending" as const,
+        difficulty: difficulties[Math.floor(Math.random() * difficulties.length)],
+        discoveredDate: new Date().toISOString()
+      };
+    });
   };
 
   const updateOverview = useCallback(() => {
@@ -150,7 +159,7 @@ export function useOnPageSEO(clientId: string | null) {
     const totalVolume = analyses.reduce((sum, analysis) => sum + analysis.volume, 0);
     const topPages = analyses.slice(0, 4).map(analysis => ({
       url: analysis.url,
-      priority: analysis.position > 50 ? "high" : analysis.position > 20 ? "medium" : "low",
+      priority: (analysis.position > 50 ? "high" : analysis.position > 20 ? "medium" : "low") as "high" | "medium" | "low",
       volume: analysis.volume,
       ideas: ideas.filter(idea => idea.page === analysis.url).length
     }));
