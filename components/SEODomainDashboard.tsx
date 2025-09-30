@@ -107,6 +107,16 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
   const [analysis, setAnalysis] = useState<DomainAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Technical Issues Modal State
+  const [showTechnicalModal, setShowTechnicalModal] = useState(false);
+  const [selectedIssueType, setSelectedIssueType] = useState<'error' | 'warning' | 'notice' | 'all'>('all');
+
+  // Handle clicking on technical health items
+  const handleTechnicalItemClick = (issueType: 'error' | 'warning' | 'notice' | 'all') => {
+    setSelectedIssueType(issueType);
+    setShowTechnicalModal(true);
+  };
 
   const loadDomainAnalysis = useCallback(async () => {
     setIsLoading(true);
@@ -368,21 +378,31 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-4">
-                <div className="text-center">
+                <div 
+                  className="text-center p-3 rounded-lg border hover:bg-red-50 cursor-pointer transition-colors"
+                  onClick={() => handleTechnicalItemClick('error')}
+                >
                   <div className="text-2xl font-bold text-red-600">{analysis.technicalSEO.errors}</div>
                   <div className="text-sm text-gray-600">Errors</div>
+                  <div className="text-xs text-red-600 mt-1">Click to view details</div>
                 </div>
-                <div className="text-center">
+                <div 
+                  className="text-center p-3 rounded-lg border hover:bg-yellow-50 cursor-pointer transition-colors"
+                  onClick={() => handleTechnicalItemClick('warning')}
+                >
                   <div className="text-2xl font-bold text-yellow-600">{analysis.technicalSEO.warnings}</div>
                   <div className="text-sm text-gray-600">Warnings</div>
+                  <div className="text-xs text-yellow-600 mt-1">Click to view details</div>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-3 rounded-lg border bg-gray-50">
                   <div className="text-2xl font-bold text-green-600">{analysis.technicalSEO.mobileScore}</div>
                   <div className="text-sm text-gray-600">Mobile Score</div>
+                  <div className="text-xs text-gray-500 mt-1">Performance metric</div>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-3 rounded-lg border bg-gray-50">
                   <div className="text-2xl font-bold text-blue-600">{analysis.technicalSEO.loadTime}s</div>
                   <div className="text-sm text-gray-600">Load Time</div>
+                  <div className="text-xs text-gray-500 mt-1">Performance metric</div>
                 </div>
               </div>
             </CardContent>
@@ -695,6 +715,120 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
               </CardContent>
             </Card>
           </div>
+        </div>
+      )}
+
+      {/* Technical Issues Modal */}
+      {showTechnicalModal && analysis && (
+        <div className="fixed inset-0 bg-gradient-to-br from-gray-900/40 via-gray-800/30 to-gray-900/40 flex items-center justify-center z-50">
+          <Card className="w-full max-w-4xl max-h-[80vh] bg-white overflow-hidden">
+            <CardHeader className="border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>
+                    Technical Issues - {selectedIssueType === 'all' ? 'All Issues' : selectedIssueType.charAt(0).toUpperCase() + selectedIssueType.slice(1) + 's'}
+                  </CardTitle>
+                  <CardDescription>
+                    Detailed view of technical SEO issues for {analysis.domain}
+                  </CardDescription>
+                </div>
+                <Button variant="outline" onClick={() => setShowTechnicalModal(false)}>
+                  ✕ Close
+                </Button>
+              </div>
+              
+              {/* Filter Tabs */}
+              <div className="flex gap-2 mt-4">
+                {[
+                  { key: 'all', label: 'All Issues', count: analysis.technicalSEO.issues.length },
+                  { key: 'error', label: 'Errors', count: analysis.technicalSEO.errors },
+                  { key: 'warning', label: 'Warnings', count: analysis.technicalSEO.warnings },
+                  { key: 'notice', label: 'Notices', count: analysis.technicalSEO.notices }
+                ].map((tab) => (
+                  <Button
+                    key={tab.key}
+                    variant={selectedIssueType === tab.key ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedIssueType(tab.key as 'error' | 'warning' | 'notice' | 'all')}
+                    className="text-xs"
+                  >
+                    {tab.label} ({tab.count})
+                  </Button>
+                ))}
+              </div>
+            </CardHeader>
+            
+            <CardContent className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="space-y-4">
+                {analysis.technicalSEO.issues
+                  .filter(issue => selectedIssueType === 'all' || issue.type === selectedIssueType)
+                  .map((issue, index) => (
+                    <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <Badge 
+                            variant={
+                              issue.type === "error" ? "destructive" :
+                              issue.type === "warning" ? "warning" : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {issue.type.toUpperCase()}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {issue.category}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-gray-900">{issue.count}</div>
+                          <div className="text-xs text-gray-500">instances</div>
+                        </div>
+                      </div>
+                      
+                      <h4 className="font-semibold text-gray-900 mb-2">{issue.title}</h4>
+                      <p className="text-sm text-gray-600 mb-3">{issue.description}</p>
+                      
+                      {/* Mock detailed information */}
+                      <div className="bg-gray-50 rounded p-3 text-xs">
+                        <div className="grid gap-2 md:grid-cols-2">
+                          <div>
+                            <span className="font-medium">Priority:</span> {
+                              issue.type === 'error' ? 'High' : 
+                              issue.type === 'warning' ? 'Medium' : 'Low'
+                            }
+                          </div>
+                          <div>
+                            <span className="font-medium">Impact:</span> {
+                              issue.type === 'error' ? 'SEO & User Experience' : 
+                              issue.type === 'warning' ? 'SEO Performance' : 'Minor'
+                            }
+                          </div>
+                          <div>
+                            <span className="font-medium">Fix Time:</span> {
+                              issue.type === 'error' ? '2-4 hours' : 
+                              issue.type === 'warning' ? '1-2 hours' : '30 mins'
+                            }
+                          </div>
+                          <div>
+                            <span className="font-medium">Difficulty:</span> {
+                              issue.type === 'error' ? 'Medium' : 
+                              issue.type === 'warning' ? 'Easy' : 'Easy'
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                
+                {analysis.technicalSEO.issues.filter(issue => selectedIssueType === 'all' || issue.type === selectedIssueType).length === 0 && (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">✅</div>
+                    <p className="text-gray-600">No {selectedIssueType === 'all' ? 'issues' : selectedIssueType + 's'} found!</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
