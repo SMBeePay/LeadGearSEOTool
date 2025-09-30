@@ -59,9 +59,9 @@ export function useOnPageSEO(clientId: string | null) {
   const [error, setError] = useState<string | null>(null);
 
   const runAnalysis = useCallback(async (url: string, keyword: string) => {
+    // Allow running analysis without client for quick audits
     if (!clientId) {
-      setError('No client selected');
-      return;
+      console.log('Running quick audit without client selection');
     }
 
     setIsLoading(true);

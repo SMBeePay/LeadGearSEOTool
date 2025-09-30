@@ -31,6 +31,7 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
   const [newAnalysisKeyword, setNewAnalysisKeyword] = useState("");
   const [showAddAnalysis, setShowAddAnalysis] = useState(false);
   const [expandedAnalysis, setExpandedAnalysis] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   interface DetailedIdea {
     id: string;
     category: string;
@@ -69,10 +70,19 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
   const handleRunNewAnalysis = async () => {
     if (!newAnalysisUrl || !newAnalysisKeyword) return;
     
+    setSuccessMessage(null); // Clear any existing success message
     await runAnalysis(newAnalysisUrl, newAnalysisKeyword);
+    
+    // Show success message
+    setSuccessMessage(`✅ Audit completed successfully for ${newAnalysisUrl}! Check the results below.`);
+    setTimeout(() => setSuccessMessage(null), 5000); // Auto-hide after 5 seconds
+    
     setNewAnalysisUrl("");
     setNewAnalysisKeyword("");
     setShowAddAnalysis(false);
+    
+    // Automatically switch to the optimization-ideas tab to show results
+    setOnPageTab("optimization-ideas");
   };
 
   const handleRerunAnalysis = async (analysis: OnPageAnalysis) => {
@@ -162,9 +172,16 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
             size="sm"
             onClick={() => setShowAddAnalysis(true)}
             disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white min-w-[140px]"
           >
-            🔍 Run Quick Audit
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                Running...
+              </div>
+            ) : (
+              <>🔍 Run Quick Audit</>
+            )}
           </Button>
           <select 
             className="px-3 py-2 border border-gray-300 rounded-md text-sm"
@@ -221,6 +238,23 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
         </Card>
       )}
 
+      {/* Success Display */}
+      {successMessage && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-green-600">✅</span>
+                <span className="text-green-800">{successMessage}</span>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setSuccessMessage(null)}>
+                Dismiss
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Add Analysis Modal */}
       {showAddAnalysis && (
         <Card className="border-blue-200 bg-blue-50">
@@ -257,8 +291,16 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
               <Button 
                 onClick={handleRunNewAnalysis}
                 disabled={!newAnalysisUrl || !newAnalysisKeyword || isLoading}
+                className="min-w-[120px]"
               >
-                {isLoading ? "Running Audit..." : "Run Audit"}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Running Audit...
+                  </div>
+                ) : (
+                  "Run Audit"
+                )}
               </Button>
               <Button 
                 variant="outline" 
@@ -767,9 +809,16 @@ export function OnPageSEOChecker({ clients, selectedClient, onClientSelect }: On
               <Button 
                 onClick={() => setShowAddAnalysis(true)}
                 disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 min-w-[160px]"
               >
-                🚀 Start New Audit
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Running Audit...
+                  </div>
+                ) : (
+                  <>🚀 Start New Audit</>
+                )}
               </Button>
               <p className="text-sm text-gray-500">Or select a client above to view saved analyses</p>
             </div>
