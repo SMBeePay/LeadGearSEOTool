@@ -6,6 +6,68 @@ import { formatDate } from "@/lib/utils";
 import { OnPageSEOChecker } from "@/components/OnPageSEOChecker";
 import { SEODomainDashboard } from "@/components/SEODomainDashboard";
 import { AIReadinessDashboard } from "@/components/AIReadinessDashboard";
+import { KeywordTrackingDashboard } from "@/components/KeywordTrackingDashboard";
+
+interface AuditConfirmationProps {
+  client: Client;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function AuditConfirmationDialog({ client, onConfirm, onCancel }: AuditConfirmationProps) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Run Comprehensive Audit?</CardTitle>
+          <CardDescription>Confirm audit details and estimated cost</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50">
+            <p className="font-semibold text-gray-900">{client.name}</p>
+            <p className="text-sm text-gray-600">{client.website}</p>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-semibold text-gray-900">What will be analyzed:</h4>
+            <ul className="text-sm text-gray-600 space-y-1 ml-4">
+              <li>• Technical SEO (on-page analysis)</li>
+              <li>• Performance metrics (Lighthouse audit)</li>
+              <li>• Meta tags and content quality</li>
+              <li>• Page structure and internal linking</li>
+            </ul>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium text-gray-900">Estimated API Cost:</span>
+              <span className="text-lg font-bold text-yellow-700">$1.50 - $2.00</span>
+            </div>
+            <p className="text-xs text-gray-600">
+              Cost varies based on website size and complexity
+            </p>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1"
+              onClick={onConfirm}
+            >
+              Run Audit
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 // Client data types with service tiers
 interface Client {
@@ -686,6 +748,9 @@ export default function SEODashboard() {
   const [clients, setClients] = useState<Client[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
+  const [showAuditConfirmation, setShowAuditConfirmation] = useState(false);
+  const [selectedClientForAudit, setSelectedClientForAudit] = useState<Client | null>(null);
+  const [isRunningAudit, setIsRunningAudit] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
   // On-Page SEO Tracker State
@@ -694,6 +759,7 @@ export default function SEODashboard() {
   // Client Detail View State
   const [viewingClientDetail, setViewingClientDetail] = useState<Client | null>(null);
   const [viewingAIReadiness, setViewingAIReadiness] = useState<Client | null>(null);
+  const [viewingKeywordTracking, setViewingKeywordTracking] = useState<Client | null>(null);
   
   // Add New Client Modal State
   const [showAddClientModal, setShowAddClientModal] = useState(false);
@@ -756,6 +822,52 @@ export default function SEODashboard() {
     rejected: "destructive",
   } as const;
 
+  // Audit handlers
+  const handleRunAudit = (client: Client) => {
+    setSelectedClientForAudit(client);
+    setShowAuditConfirmation(true);
+  };
+
+  const handleConfirmAudit = async () => {
+    if (!selectedClientForAudit) return;
+
+    setIsRunningAudit(true);
+    setShowAuditConfirmation(false);
+
+    try {
+      const response = await fetch('/api/full-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: selectedClientForAudit.id,
+          website: selectedClientForAudit.website,
+          location: 'United States',
+          language: 'en'
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Audit completed! Score: ${result.overallScore}/100\nAPI Cost: $${result.apiCost.toFixed(2)}`);
+        
+        // Update client with new audit data
+        setClients(prev => prev.map(c => 
+          c.id === selectedClientForAudit.id 
+            ? { ...c, lastAuditScore: result.overallScore, lastAuditDate: new Date() }
+            : c
+        ));
+      } else {
+        alert('Audit failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Audit error:', error);
+      alert('Error running audit. Please check console for details.');
+    } finally {
+      setIsRunningAudit(false);
+      setSelectedClientForAudit(null);
+    }
+  };
+
   // Add New Client Handlers
   const handleAddClient = () => {
     if (!newClientForm.name || !newClientForm.website || !newClientForm.industry) {
@@ -810,9 +922,14 @@ export default function SEODashboard() {
     setViewingAIReadiness(client);
   };
 
+  const handleViewKeywordTracking = (client: Client) => {
+    setViewingKeywordTracking(client);
+  };
+
   const handleBackToDashboard = () => {
     setViewingClientDetail(null);
     setViewingAIReadiness(null);
+    setViewingKeywordTracking(null);
   };
 
   const handleTaskAction = (taskId: string, action: "approve" | "reject") => {
@@ -832,6 +949,39 @@ export default function SEODashboard() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading SEO Dashboard...</p>
         </div>
+      </div>
+    );
+  }
+
+  // If viewing keyword tracking, show keyword tracking dashboard
+  if (viewingKeywordTracking) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Lead Gear SEO Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Keyword Tracking & Ranking Intelligence
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm">
+                🔄 Refresh Data
+              </Button>
+              <Button variant="outline" size="sm">
+                📊 Generate Report
+              </Button>
+            </div>
+          </div>
+        </header>
+        <main className="p-6">
+          <KeywordTrackingDashboard
+            clientId={viewingKeywordTracking.id}
+            clientName={viewingKeywordTracking.name}
+            onBack={handleBackToDashboard}
+          />
+        </main>
       </div>
     );
   }
@@ -902,6 +1052,18 @@ export default function SEODashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Audit Confirmation Dialog */}
+      {showAuditConfirmation && selectedClientForAudit && (
+        <AuditConfirmationDialog
+          client={selectedClientForAudit}
+          onConfirm={handleConfirmAudit}
+          onCancel={() => {
+            setShowAuditConfirmation(false);
+            setSelectedClientForAudit(null);
+          }}
+        />
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -1414,7 +1576,18 @@ export default function SEODashboard() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">Schedule Audit</Button>
-                <Button size="sm">Run New Audit</Button>
+                <Button 
+                  size="sm"
+                  disabled={isRunningAudit}
+                  onClick={() => {
+                    const activeClients = leadGearClients.filter(c => c.status === 'active');
+                    if (activeClients.length > 0) {
+                      handleRunAudit(activeClients[0]);
+                    }
+                  }}
+                >
+                  {isRunningAudit ? '⏳ Running...' : 'Run New Audit'}
+                </Button>
               </div>
             </div>
 
@@ -1541,6 +1714,14 @@ export default function SEODashboard() {
                               onClick={() => handleViewClientDetails(client)}
                             >
                               View Details
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleRunAudit(client)}
+                              disabled={isRunningAudit}
+                            >
+                              {isRunningAudit ? '⏳' : '🔄'} Run Audit
                             </Button>
                             <Button variant="outline" size="sm">
                               Download Report

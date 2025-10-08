@@ -7,8 +7,6 @@ import { TechnicalIssuesDetailed } from "./TechnicalIssuesDetailed";
 import { MetaTagsManager } from "./MetaTagsManager";
 import { KeywordTrackingDashboard } from "./KeywordTrackingDashboard";
 import { KeywordOpportunityFinder } from "./KeywordOpportunityFinder";
-import { CompetitorDashboard } from "./CompetitorDashboard";
-import { KeywordGapAnalysis } from "./KeywordGapAnalysis";
 
 interface Client {
   id: string;
@@ -116,8 +114,7 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
   const [currentAuditId, setCurrentAuditId] = useState<string | null>(null);
   
   // View state for drill-down components
-  const [viewMode, setViewMode] = useState<'dashboard' | 'technical-issues' | 'meta-tags' | 'keyword-tracking' | 'opportunities' | 'competitors' | 'keyword-gap'>('dashboard');
-  const [selectedCompetitor, setSelectedCompetitor] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'dashboard' | 'technical-issues' | 'meta-tags' | 'keyword-tracking' | 'opportunities'>('dashboard');
 
   const handleViewTechnicalIssues = () => {
     setViewMode('technical-issues');
@@ -135,23 +132,8 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
     setViewMode('opportunities');
   };
 
-  const handleViewCompetitors = () => {
-    setViewMode('competitors');
-  };
-
-  const handleViewKeywordGap = (competitor: any) => {
-    setSelectedCompetitor(competitor);
-    setViewMode('keyword-gap');
-  };
-
   const handleBackToDashboard = () => {
     setViewMode('dashboard');
-    setSelectedCompetitor(null);
-  };
-
-  const handleBackToCompetitors = () => {
-    setViewMode('competitors');
-    setSelectedCompetitor(null);
   };
 
   const loadDomainAnalysis = useCallback(async () => {
@@ -304,30 +286,6 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
         clientName={client.name}
         clientWebsite={client.website}
         onBack={handleBackToDashboard}
-      />
-    );
-  }
-
-  if (viewMode === 'competitors') {
-    return (
-      <CompetitorDashboard
-        clientId={client.id}
-        clientName={client.name}
-        clientWebsite={client.website}
-        onBack={handleBackToDashboard}
-        onViewKeywordGap={handleViewKeywordGap}
-      />
-    );
-  }
-
-  if (viewMode === 'keyword-gap' && selectedCompetitor) {
-    return (
-      <KeywordGapAnalysis
-        clientId={client.id}
-        clientName={client.name}
-        clientWebsite={client.website}
-        competitor={selectedCompetitor}
-        onBack={handleBackToCompetitors}
       />
     );
   }
@@ -596,15 +554,8 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Main Organic Competitors</CardTitle>
-                  <CardDescription>Domains competing for similar keywords</CardDescription>
-                </div>
-                <Button size="sm" onClick={handleViewCompetitors}>
-                  🎯 Manage Competitors
-                </Button>
-              </div>
+              <CardTitle>Main Organic Competitors</CardTitle>
+              <CardDescription>Domains competing for similar keywords</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -853,6 +804,119 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
         </div>
       )}
 
+      {/* Technical Issues Modal */}
+      {showTechnicalModal && analysis && (
+        <div className="fixed inset-0 bg-gradient-to-br from-gray-900/40 via-gray-800/30 to-gray-900/40 flex items-center justify-center z-50">
+          <Card className="w-full max-w-4xl max-h-[80vh] bg-white overflow-hidden">
+            <CardHeader className="border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>
+                    Technical Issues - {selectedIssueType === 'all' ? 'All Issues' : selectedIssueType.charAt(0).toUpperCase() + selectedIssueType.slice(1) + 's'}
+                  </CardTitle>
+                  <CardDescription>
+                    Detailed view of technical SEO issues for {analysis.domain}
+                  </CardDescription>
+                </div>
+                <Button variant="outline" onClick={() => setShowTechnicalModal(false)}>
+                  ✕ Close
+                </Button>
+              </div>
+              
+              {/* Filter Tabs */}
+              <div className="flex gap-2 mt-4">
+                {[
+                  { key: 'all', label: 'All Issues', count: analysis.technicalSEO.issues.length },
+                  { key: 'error', label: 'Errors', count: analysis.technicalSEO.errors },
+                  { key: 'warning', label: 'Warnings', count: analysis.technicalSEO.warnings },
+                  { key: 'notice', label: 'Notices', count: analysis.technicalSEO.notices }
+                ].map((tab) => (
+                  <Button
+                    key={tab.key}
+                    variant={selectedIssueType === tab.key ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedIssueType(tab.key as 'error' | 'warning' | 'notice' | 'all')}
+                    className="text-xs"
+                  >
+                    {tab.label} ({tab.count})
+                  </Button>
+                ))}
+              </div>
+            </CardHeader>
+            
+            <CardContent className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="space-y-4">
+                {analysis.technicalSEO.issues
+                  .filter(issue => selectedIssueType === 'all' || issue.type === selectedIssueType)
+                  .map((issue, index) => (
+                    <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <Badge 
+                            variant={
+                              issue.type === "error" ? "destructive" :
+                              issue.type === "warning" ? "warning" : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {issue.type.toUpperCase()}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {issue.category}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-gray-900">{issue.count}</div>
+                          <div className="text-xs text-gray-500">instances</div>
+                        </div>
+                      </div>
+                      
+                      <h4 className="font-semibold text-gray-900 mb-2">{issue.title}</h4>
+                      <p className="text-sm text-gray-600 mb-3">{issue.description}</p>
+                      
+                      {/* Mock detailed information */}
+                      <div className="bg-gray-50 rounded p-3 text-xs">
+                        <div className="grid gap-2 md:grid-cols-2">
+                          <div>
+                            <span className="font-medium">Priority:</span> {
+                              issue.type === 'error' ? 'High' : 
+                              issue.type === 'warning' ? 'Medium' : 'Low'
+                            }
+                          </div>
+                          <div>
+                            <span className="font-medium">Impact:</span> {
+                              issue.type === 'error' ? 'SEO & User Experience' : 
+                              issue.type === 'warning' ? 'SEO Performance' : 'Minor'
+                            }
+                          </div>
+                          <div>
+                            <span className="font-medium">Fix Time:</span> {
+                              issue.type === 'error' ? '2-4 hours' : 
+                              issue.type === 'warning' ? '1-2 hours' : '30 mins'
+                            }
+                          </div>
+                          <div>
+                            <span className="font-medium">Difficulty:</span> {
+                              issue.type === 'error' ? 'Medium' : 
+                              issue.type === 'warning' ? 'Easy' : 'Easy'
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                
+                {analysis.technicalSEO.issues.filter(issue => selectedIssueType === 'all' || issue.type === selectedIssueType).length === 0 && (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">✅</div>
+                    <p className="text-gray-600">No {selectedIssueType === 'all' ? 'issues' : selectedIssueType + 's'} found!</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

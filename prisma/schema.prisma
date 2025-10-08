@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id              String   @id @default(cuid())
+  name            String
+  website         String
+  industry        String
+  status          String   @default("active")
+  serviceTier     String
+  lastAuditScore  Int?
+  monthlyKeywords Int?
+  lastAuditDate   DateTime?
+  nextAuditDate   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  audits          AuditRun[]
+  keywords        KeywordTracked[]
+  backlinks       Backlink[]
+  tasks           Task[]
+  competitors     Competitor[]
+  keywordGaps     KeywordGap[]
+  contentGaps     ContentGap[]
+  pageOptimizations PageOptimization[]
+  contentBriefs   ContentBrief[]
+  backlinkGaps    BacklinkGap[]
+}
+
+model AuditRun {
+  id             String   @id @default(cuid())
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  timestamp      DateTime @default(now())
+  overallScore   Int
+  technicalScore Int
+  contentScore   Int
+  backlinkScore  Int
+  uxScore        Int
+  apiCost        Float    @default(0)
+  
+  technicalIssues TechnicalIssue[]
+  metaTags        MetaTag[]
+  contentScores   ContentScore[]
+}
+
+model TechnicalIssue {
+  id          String   @id @default(cuid())
+  auditId     String
+  audit       AuditRun @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  issueType   String
+  severity    String
+  category    String
+  title       String
+  description String
+  url         String
+  howToFix    String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  
+  @@index([auditId, severity])
+}
+
+model MetaTag {
+  id              String   @id @default(cuid())
+  auditId         String
+  audit           AuditRun @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  pageUrl         String
+  currentTitle    String?
+  currentDesc     String?
+  recommendedTitle String?
+  recommendedDesc  String?
+  missingTags     String
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+  
+  @@index([auditId])
+}
+
+model KeywordTracked {
+  id            String   @id @default(cuid())
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  keyword       String
+  currentRank   Int?
+  previousRank  Int?
+  volume        Int
+  difficulty    Int
+  cpc           Float
+  url           String
+  serpFeatures  String?
+  lastChecked   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  
+  rankings      RankingHistory[]
+  
+  @@index([clientId, keyword])
+}
+
+model RankingHistory {
+  id               String         @id @default(cuid())
+  keywordId        String
+  keyword          KeywordTracked @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  rank             Int
+  url              String
+  serpFeatures     String?
+  estimatedTraffic Int?
+  checkedAt        DateTime       @default(now())
+  
+  @@index([keywordId, checkedAt])
+}
+
+model Backlink {
+  id           String   @id @default(cuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  sourceUrl    String
+  sourceDomain String
+  targetUrl    String
+  anchorText   String
+  linkType     String
+  daScore      Int?
+  spamScore    Int?
+  firstSeen    DateTime
+  lastSeen     DateTime @default(now())
+  status       String   @default("active")
+  
+  @@index([clientId, status])
+}
+
+model ContentScore {
+  id              String   @id @default(cuid())
+  auditId         String
+  audit           AuditRun @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  pageUrl         String
+  qualityScore    Int
+  readability     Float
+  wordCount       Int
+  keywordDensity  Float
+  internalLinks   Int
+  externalLinks   Int
+  images          Int
+  missingAltTags  Int
+  recommendations String
+  createdAt       DateTime @default(now())
+  
+  @@index([auditId])
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  taskType    String
+  category    String
+  title       String
+  description String
+  priority    String
+  difficulty  String
+  status      String   @default("pending")
+  assignedTo  String?
+  impact      String?
+  effort      String?
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([clientId, status])
+}
+
+model ApiUsage {
+  id        String   @id @default(cuid())
+  clientId  String?
+  endpoint  String
+  cost      Float
+  timestamp DateTime @default(now())
+  
+  @@index([clientId, timestamp])
+}
+
+model Competitor {
+  id           String   @id @default(cuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  domain       String
+  name         String
+  addedAt      DateTime @default(now())
+  lastAnalysis DateTime?
+  
+  snapshots    CompetitorSnapshot[]
+  
+  @@index([clientId])
+}
+
+model CompetitorSnapshot {
+  id               String     @id @default(cuid())
+  competitorId     String
+  competitor       Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  organicKeywords  Int
+  organicTraffic   Int
+  paidKeywords     Int
+  backlinks        Int
+  referringDomains Int
+  domainRating     Int
+  capturedAt       DateTime   @default(now())
+  
+  @@index([competitorId, capturedAt])
+}
+
+model KeywordGap {
+  id             String   @id @default(cuid())
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  competitorId   String
+  keyword        String
+  clientRank     Int?
+  competitorRank Int
+  searchVolume   Int
+  difficulty     Int
+  cpc            Float
+  gapType        String
+  opportunity    Int
+  analyzedAt     DateTime @default(now())
+  
+  @@index([clientId, gapType])
+  @@index([competitorId])
+}
+
+model ContentGap {
+  id               String   @id @default(cuid())
+  clientId         String
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  competitorDomain String
+  topicCluster     String
+  missingPages     Int
+  competitorPages  String
+  estimatedTraffic Int
+  avgKeywords      Int
+  opportunity      Int
+  analyzedAt       DateTime @default(now())
+  
+  @@index([clientId, opportunity])
+}
+
+model PageOptimization {
+  id              String   @id @default(cuid())
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  url             String
+  targetKeyword   String
+  currentScore    Int
+  recommendations String
+  competitorData  String
+  analyzedAt      DateTime @default(now())
+  
+  @@index([clientId, url])
+}
+
+model ContentBrief {
+  id              String   @id @default(cuid())
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  keyword         String
+  targetWordCount Int
+  briefData       String
+  serpAnalysis    String
+  status          String   @default("draft")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([clientId, status])
+}
+
+model BacklinkGap {
+  id                    String   @id @default(cuid())
+  clientId              String
+  client                Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  competitorDomain      String
+  referringDomain       String
+  domainRank            Int
+  backlinksToCompetitor Int
+  relevanceScore        Int
+  outreachStatus        String   @default("pending")
+  contactInfo           String?
+  analyzedAt            DateTime @default(now())
+  
+  @@index([clientId, outreachStatus])
+  @@index([clientId, relevanceScore])
+}
