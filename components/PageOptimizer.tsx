@@ -64,7 +64,7 @@ interface PageOptimizerProps {
   onBack: () => void;
 }
 
-export function PageOptimizer({ clientId, clientName, clientWebsite, onBack }: PageOptimizerProps) {
+export function PageOptimizer({ clientId, onBack }: PageOptimizerProps) {
   const [url, setUrl] = useState("");
   const [targetKeyword, setTargetKeyword] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);

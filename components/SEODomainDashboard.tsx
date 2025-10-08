@@ -117,7 +117,11 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
   
   // View state for drill-down components
   const [viewMode, setViewMode] = useState<'dashboard' | 'technical-issues' | 'meta-tags' | 'keyword-tracking' | 'opportunities' | 'competitors' | 'keyword-gap'>('dashboard');
-  const [selectedCompetitor, setSelectedCompetitor] = useState<any>(null);
+  const [selectedCompetitor, setSelectedCompetitor] = useState<{
+    id: string;
+    domain: string;
+    name: string;
+  } | null>(null);
 
   const handleViewTechnicalIssues = () => {
     setViewMode('technical-issues');
@@ -139,7 +143,7 @@ export function SEODomainDashboard({ client, onBack }: SEODomainDashboardProps) 
     setViewMode('competitors');
   };
 
-  const handleViewKeywordGap = (competitor: any) => {
+  const handleViewKeywordGap = (competitor: { id: string; domain: string; name: string }) => {
     setSelectedCompetitor(competitor);
     setViewMode('keyword-gap');
   };

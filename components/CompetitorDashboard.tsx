@@ -41,10 +41,6 @@ export function CompetitorDashboard({
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
   const [suggestedCompetitors, setSuggestedCompetitors] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadCompetitors();
-  }, [clientId]);
-
   const loadCompetitors = async () => {
     try {
       const response = await fetch(`/api/competitors?clientId=${clientId}`);
@@ -58,6 +54,10 @@ export function CompetitorDashboard({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadCompetitors();
+  }, [clientId]);
 
   const discoverCompetitors = async () => {
     setIsLoading(true);

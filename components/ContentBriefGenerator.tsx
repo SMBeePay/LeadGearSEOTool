@@ -41,9 +41,7 @@ interface ContentBriefGeneratorProps {
 }
 
 export function ContentBriefGenerator({ 
-  clientId, 
-  clientName, 
-  clientWebsite,
+  clientId,
   onBack 
 }: ContentBriefGeneratorProps) {
   const [keyword, setKeyword] = useState("");

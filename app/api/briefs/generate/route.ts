@@ -30,7 +30,14 @@ export async function POST(request: NextRequest) {
       })
     });
 
-    const topCompetitors: any[] = [];
+    const topCompetitors: Array<{
+      url: string;
+      rank: number;
+      wordCount: number;
+      h2Count: number;
+      imagesCount: number;
+      keyStrengths: string[];
+    }> = [];
     let paaQuestions: string[] = [];
     
     if (serpResponse.ok) {
@@ -38,14 +45,14 @@ export async function POST(request: NextRequest) {
       const items = serpData?.result?.items?.[0]?.items || [];
       totalApiCost += 1.5;
 
-      items.forEach((item: any) => {
+      items.forEach((item: { type?: string; title?: string; items?: Array<{ title?: string }> }) => {
         if (item.type === 'people_also_ask') {
-          const questions = item.items?.map((q: any) => q.title).filter(Boolean) || [];
+          const questions = item.items?.map((q: { title?: string }) => q.title).filter((t): t is string => Boolean(t)) || [];
           paaQuestions = [...paaQuestions, ...questions];
         }
       });
 
-      for (const item of items.slice(0, 10)) {
+      for (const item of items.slice(0, 10) as Array<{ type?: string; url?: string; rank_group?: number; rank_absolute?: number }>) {
         if (item.type === 'organic' && item.url) {
           const pageAnalysisResponse = await fetch('http://localhost:3333/mcp/call', {
             method: 'POST',
@@ -110,7 +117,7 @@ export async function POST(request: NextRequest) {
       const items = relatedData?.result?.items || [];
       totalApiCost += 2.0;
       
-      items.forEach((item: any) => {
+      items.forEach((item: { keyword_data?: { keyword?: string } }) => {
         const kw = item.keyword_data?.keyword;
         if (kw && kw !== keyword) {
           relatedKeywords.push(kw);
@@ -121,9 +128,6 @@ export async function POST(request: NextRequest) {
     const avgWordCount = topCompetitors.length > 0
       ? Math.round(topCompetitors.reduce((sum, c) => sum + c.wordCount, 0) / topCompetitors.length)
       : 2000;
-    const avgH2Count = topCompetitors.length > 0
-      ? Math.round(topCompetitors.reduce((sum, c) => sum + c.h2Count, 0) / topCompetitors.length)
-      : 8;
 
     const recommendedSections = [
       {

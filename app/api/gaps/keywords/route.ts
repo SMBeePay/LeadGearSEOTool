@@ -71,7 +71,21 @@ export async function POST(request: NextRequest) {
       const competitorKeywords = compData?.result?.items || [];
       totalApiCost += 2.0;
 
-      const keywordList = competitorKeywords.map((item: any) => ({
+      const keywordList = competitorKeywords.map((item: {
+        keyword_data?: {
+          keyword?: string;
+          keyword_info?: {
+            search_volume?: number;
+            competition?: number;
+            cpc?: number;
+          };
+        };
+        ranked_serp_element?: {
+          serp_item?: {
+            rank_group?: number;
+          };
+        };
+      }) => ({
         keyword: item.keyword_data?.keyword || '',
         competitorRank: item.ranked_serp_element?.serp_item?.rank_group || 100,
         searchVolume: item.keyword_data?.keyword_info?.search_volume || 0,
@@ -93,14 +107,17 @@ export async function POST(request: NextRequest) {
         })
       });
 
-      let clientKeywordMap = new Map<string, number>();
+      const clientKeywordMap = new Map<string, number>();
       
       if (clientKeywordsResponse.ok) {
         const clientData = await clientKeywordsResponse.json();
         const clientKeywords = clientData?.result?.items || [];
         totalApiCost += 2.0;
         
-        clientKeywords.forEach((item: any) => {
+        clientKeywords.forEach((item: {
+          keyword_data?: { keyword?: string };
+          ranked_serp_element?: { serp_item?: { rank_group?: number } };
+        }) => {
           const keyword = item.keyword_data?.keyword || '';
           const rank = item.ranked_serp_element?.serp_item?.rank_group || 100;
           clientKeywordMap.set(keyword, rank);

@@ -36,7 +36,18 @@ export async function POST(request: NextRequest) {
       })
     });
 
-    let pageData: any = null;
+    let pageData: {
+      meta?: {
+        content?: { plain_text_word_count?: number };
+        title?: string;
+        description?: string;
+        htags?: { h1?: string[]; h2?: string[]; h3?: string[] };
+        internal_links_count?: number;
+        external_links_count?: number;
+        images_count?: number;
+        images_without_alt?: number;
+      };
+    } | null = null;
     if (pageAnalysisResponse.ok) {
       const data = await pageAnalysisResponse.json();
       pageData = data?.result?.items?.[0] || null;
@@ -57,7 +68,17 @@ export async function POST(request: NextRequest) {
       })
     });
 
-    const competitors: any[] = [];
+    const competitors: Array<{
+      url: string;
+      rank: number;
+      wordCount: number;
+      titleLength: number;
+      descLength: number;
+      headings: { h1: number; h2: number; h3: number };
+      internalLinks: number;
+      externalLinks: number;
+      images: number;
+    }> = [];
     if (serpResponse.ok) {
       const serpData = await serpResponse.json();
       const items = serpData?.result?.items?.[0]?.items || [];
@@ -151,7 +172,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!pageData?.meta?.title?.toLowerCase().includes(targetKeyword.toLowerCase())) {
+    const titleText = pageData?.meta?.title || '';
+    if (!titleText.toLowerCase().includes(targetKeyword.toLowerCase())) {
       recommendations.push({
         category: "Meta Tags",
         priority: "high",
