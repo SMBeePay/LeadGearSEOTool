@@ -61,7 +61,7 @@ async function analyzePageWithDataForSEO(request: OnPageAnalysisRequest): Promis
       })
     });
     
-    let onPageData = null;
+    let onPageData: { meta?: OnPageMeta } | null = null;
     if (onPageResponse.ok) {
       const onPageResult = await onPageResponse.json();
       onPageData = onPageResult?.result?.items?.[0];
@@ -81,7 +81,7 @@ async function analyzePageWithDataForSEO(request: OnPageAnalysisRequest): Promis
       })
     });
     
-    let keywordData = null;
+    let keywordData: { ai_search_volume?: number } | null = null;
     if (keywordResponse.ok) {
       const keywordResult = await keywordResponse.json();
       keywordData = keywordResult?.result?.items?.[0];
@@ -102,11 +102,11 @@ async function analyzePageWithDataForSEO(request: OnPageAnalysisRequest): Promis
       })
     });
     
-    let serpData = null;
+    let serpData: SerpItem[] | null = null;
     let currentPosition = Math.floor(Math.random() * 100) + 1; // Default fallback
     if (serpResponse.ok) {
       const serpResult = await serpResponse.json();
-      const serpItems = serpResult?.result?.items || [];
+      const serpItems: SerpItem[] = serpResult?.result?.items || [];
       
       // Find current page position in SERP results
       const domain = new URL(request.url).hostname;
@@ -125,7 +125,7 @@ async function analyzePageWithDataForSEO(request: OnPageAnalysisRequest): Promis
     
     // Calculate competitor benchmarks from real SERP data
     const competitorAvgContent = serpData ? 
-      Math.floor(serpData.reduce((sum: number, item: SerpItem) => sum + (item.description?.length || 200), 0) / serpData.length) + 1200 :
+      Math.floor(serpData.reduce((sum, item) => sum + (item.description?.length || 200), 0) / serpData.length) + 1200 :
       1850;
     
     const yourContentLength = onPageData?.meta?.content?.plain_text_word_count || 
@@ -160,8 +160,8 @@ async function analyzePageWithDataForSEO(request: OnPageAnalysisRequest): Promis
         },
         orderedList: {
           topAvg: "45%",
-          yourPage: onPageData?.meta?.htags?.h3?.length > 2 ? "Yes" : "No",
-          status: onPageData?.meta?.htags?.h3?.length > 2 ? "good" : "warning"
+          yourPage: (onPageData?.meta?.htags?.h3?.length ?? 0) > 2 ? "Yes" : "No",
+          status: (onPageData?.meta?.htags?.h3?.length ?? 0) > 2 ? "good" : "warning"
         },
         markups: {
           topAvg: "WebPage, Organization, Article",
@@ -250,7 +250,7 @@ function analyzeKeywordUsage(onPageData: { meta?: OnPageMeta } | null, keyword: 
   }
   
   // Check H1 tags
-  if (onPageData.meta.htags?.h1?.some((h1: string) => h1.toLowerCase().includes(lowerKeyword))) {
+  if (onPageData.meta.htags?.h1?.some((h1) => h1.toLowerCase().includes(lowerKeyword))) {
     usage.push("H1");
   }
   
