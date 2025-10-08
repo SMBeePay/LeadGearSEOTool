@@ -58,6 +58,34 @@ export function useOnPageSEO(clientId: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const updateOverview = useCallback(() => {
+    if (analyses.length === 0) return;
+
+    const categoryBreakdown: Record<string, number> = {};
+    ideas.forEach(idea => {
+      categoryBreakdown[idea.category] = (categoryBreakdown[idea.category] || 0) + 1;
+    });
+
+    const totalVolume = analyses.reduce((sum, analysis) => sum + analysis.volume, 0);
+    const topPages = analyses.slice(0, 4).map(analysis => ({
+      url: analysis.url,
+      priority: (analysis.position > 50 ? "high" : analysis.position > 20 ? "medium" : "low") as "high" | "medium" | "low",
+      volume: analysis.volume,
+      ideas: ideas.filter(idea => idea.page === analysis.url).length
+    }));
+
+    setOverview({
+      totalIdeas: ideas.length,
+      categoryBreakdown,
+      trafficPotential: {
+        current: Math.floor(totalVolume * 0.1),
+        potential: totalVolume * 2,
+        improvement: "200%+"
+      },
+      topPages
+    });
+  }, [analyses, ideas]);
+
   const runAnalysis = useCallback(async (url: string, keyword: string) => {
     // Allow running analysis without client for quick audits
     if (!clientId) {
@@ -99,15 +127,15 @@ export function useOnPageSEO(clientId: string | null) {
       const mockIdeas = generateMockIdeas(url, keyword, analysis.volume);
       setIdeas(prev => [...mockIdeas, ...prev.filter(idea => idea.page !== url)]);
       
-      // Update overview
-      updateOverview();
+      // Update overview - will be called when analyses and ideas change
+      setTimeout(updateOverview, 0);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
-  }, [clientId]);
+  }, [clientId, updateOverview]);
 
   const generateMockIdeas = (url: string, keyword: string, volume: number): OnPageIdea[] => {
     // const categories: OnPageIdea['category'][] = [
@@ -147,34 +175,6 @@ export function useOnPageSEO(clientId: string | null) {
       };
     });
   };
-
-  const updateOverview = useCallback(() => {
-    if (analyses.length === 0) return;
-
-    const categoryBreakdown: Record<string, number> = {};
-    ideas.forEach(idea => {
-      categoryBreakdown[idea.category] = (categoryBreakdown[idea.category] || 0) + 1;
-    });
-
-    const totalVolume = analyses.reduce((sum, analysis) => sum + analysis.volume, 0);
-    const topPages = analyses.slice(0, 4).map(analysis => ({
-      url: analysis.url,
-      priority: (analysis.position > 50 ? "high" : analysis.position > 20 ? "medium" : "low") as "high" | "medium" | "low",
-      volume: analysis.volume,
-      ideas: ideas.filter(idea => idea.page === analysis.url).length
-    }));
-
-    setOverview({
-      totalIdeas: ideas.length,
-      categoryBreakdown,
-      trafficPotential: {
-        current: Math.floor(totalVolume * 0.1),
-        potential: totalVolume * 2,
-        improvement: "200%+"
-      },
-      topPages
-    });
-  }, [analyses, ideas]);
 
   const loadSavedAnalyses = useCallback(async () => {
     if (!clientId) return;

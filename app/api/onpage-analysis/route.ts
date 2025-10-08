@@ -7,6 +7,29 @@ interface OnPageAnalysisRequest {
   language?: string;
 }
 
+interface SerpItem {
+  domain: string;
+  url: string;
+  rank_absolute: number;
+  type: string;
+  description?: string;
+}
+
+interface OnPageMeta {
+  title?: string;
+  description?: string;
+  htags?: {
+    h1?: string[];
+    h3?: string[];
+  };
+  images_count?: number;
+  content?: {
+    plain_text_word_count?: number;
+    flesch_kincaid_readability_index?: number;
+  };
+  social_media_tags?: Record<string, string>;
+}
+
 interface OnPageAnalysisResult {
   url: string;
   keyword: string;
@@ -87,14 +110,14 @@ async function analyzePageWithDataForSEO(request: OnPageAnalysisRequest): Promis
       
       // Find current page position in SERP results
       const domain = new URL(request.url).hostname;
-      const foundResult = serpItems.find((item: any) => 
+      const foundResult = serpItems.find((item: SerpItem) => 
         item.domain === domain || item.url === request.url
       );
       if (foundResult) {
         currentPosition = foundResult.rank_absolute;
       }
       
-      serpData = serpItems.filter((item: any) => item.type === 'organic').slice(0, 10);
+      serpData = serpItems.filter((item: SerpItem) => item.type === 'organic').slice(0, 10);
     }
     
     // Process real data to create comprehensive analysis
@@ -102,7 +125,7 @@ async function analyzePageWithDataForSEO(request: OnPageAnalysisRequest): Promis
     
     // Calculate competitor benchmarks from real SERP data
     const competitorAvgContent = serpData ? 
-      Math.floor(serpData.reduce((sum: number, item: any) => sum + (item.description?.length || 200), 0) / serpData.length) + 1200 :
+      Math.floor(serpData.reduce((sum: number, item: SerpItem) => sum + (item.description?.length || 200), 0) / serpData.length) + 1200 :
       1850;
     
     const yourContentLength = onPageData?.meta?.content?.plain_text_word_count || 
@@ -210,7 +233,7 @@ async function analyzePageWithDataForSEO(request: OnPageAnalysisRequest): Promis
 }
 
 // Helper functions for analyzing real on-page data
-function analyzeKeywordUsage(onPageData: any, keyword: string): string {
+function analyzeKeywordUsage(onPageData: { meta?: OnPageMeta } | null, keyword: string): string {
   if (!onPageData?.meta) return "Not detected";
   
   const usage: string[] = [];
@@ -239,7 +262,7 @@ function analyzeKeywordUsage(onPageData: any, keyword: string): string {
   return usage.length > 0 ? usage.join(", ") : "Body only";
 }
 
-function getKeywordUsageStatus(onPageData: any, keyword: string): "good" | "warning" | "error" {
+function getKeywordUsageStatus(onPageData: { meta?: OnPageMeta } | null, keyword: string): "good" | "warning" | "error" {
   const usage = analyzeKeywordUsage(onPageData, keyword);
   
   if (usage.includes("Title") && usage.includes("H1")) {
@@ -251,7 +274,7 @@ function getKeywordUsageStatus(onPageData: any, keyword: string): "good" | "warn
   }
 }
 
-function analyzeSchemaMarkup(onPageData: any): string {
+function analyzeSchemaMarkup(onPageData: { meta?: OnPageMeta } | null): string {
   if (!onPageData?.meta?.social_media_tags) return "None";
   
   const schemas: string[] = [];
@@ -275,7 +298,7 @@ function analyzeSchemaMarkup(onPageData: any): string {
   return schemas.length > 0 ? schemas.join(", ") : "WebPage";
 }
 
-function getSchemaStatus(onPageData: any, isHomepage: boolean): "good" | "warning" | "error" {
+function getSchemaStatus(onPageData: { meta?: OnPageMeta } | null, isHomepage: boolean): "good" | "warning" | "error" {
   const markup = analyzeSchemaMarkup(onPageData);
   
   if (isHomepage && markup.includes("Organization")) {
