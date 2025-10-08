@@ -1405,6 +1405,159 @@ export default function SEODashboard() {
           </div>
         )}
 
+        {activeTab === "audits" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">SEO Audits</h2>
+                <p className="text-sm text-gray-500">Comprehensive SEO audits for all clients</p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm">Schedule Audit</Button>
+                <Button size="sm">Run New Audit</Button>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-4">
+              <Card>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-blue-600 mb-1">{analytics?.activeAudits || 0}</div>
+                  <div className="text-sm text-gray-600">Active Audits</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-green-600 mb-1">
+                    {leadGearClients.filter(c => (c.lastAuditScore || 0) >= 80).length}
+                  </div>
+                  <div className="text-sm text-gray-600">High Performers (80+)</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-yellow-600 mb-1">
+                    {leadGearClients.filter(c => (c.lastAuditScore || 0) >= 60 && (c.lastAuditScore || 0) < 80).length}
+                  </div>
+                  <div className="text-sm text-gray-600">Needs Improvement</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="px-4 py-6">
+                  <div className="text-2xl font-bold text-purple-600 mb-1">
+                    {analytics?.averageAuditScore || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">Average Score</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Audits</CardTitle>
+                <CardDescription>Latest SEO audit results across all clients</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {leadGearClients
+                    .filter(c => c.lastAuditDate)
+                    .sort((a, b) => (b.lastAuditDate?.getTime() || 0) - (a.lastAuditDate?.getTime() || 0))
+                    .slice(0, 10)
+                    .map((client) => (
+                      <div key={client.id} className="p-4 border rounded-lg hover:border-blue-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-gray-900">{client.name}</h3>
+                              <Badge variant={getTierBadgeVariant(client.serviceTier)} className="text-xs">
+                                {client.serviceTier}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-500">{client.website}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-2xl font-bold mb-1 ${
+                              (client.lastAuditScore || 0) >= 80 ? 'text-green-600' :
+                              (client.lastAuditScore || 0) >= 60 ? 'text-yellow-600' :
+                              'text-red-600'
+                            }`}>
+                              {client.lastAuditScore || 0}/100
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {client.lastAuditDate ? formatDate(client.lastAuditDate) : 'No audit'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600">Overall Health</span>
+                            <span className="text-xs font-medium text-gray-900">
+                              {client.lastAuditScore || 0}%
+                            </span>
+                          </div>
+                          <Progress value={client.lastAuditScore || 0} className="h-2" />
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-3 mb-3">
+                          <div className="text-center p-2 bg-gray-50 rounded">
+                            <div className={`text-lg font-bold ${
+                              (client.lastAuditScore || 0) >= 85 ? 'text-green-600' : 'text-yellow-600'
+                            }`}>
+                              {Math.floor((client.lastAuditScore || 0) * 0.9)}
+                            </div>
+                            <div className="text-xs text-gray-600">Technical</div>
+                          </div>
+                          <div className="text-center p-2 bg-gray-50 rounded">
+                            <div className={`text-lg font-bold ${
+                              (client.lastAuditScore || 0) >= 75 ? 'text-green-600' : 'text-yellow-600'
+                            }`}>
+                              {Math.floor((client.lastAuditScore || 0) * 0.85)}
+                            </div>
+                            <div className="text-xs text-gray-600">Content</div>
+                          </div>
+                          <div className="text-center p-2 bg-gray-50 rounded">
+                            <div className={`text-lg font-bold ${
+                              (client.lastAuditScore || 0) >= 70 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {Math.floor((client.lastAuditScore || 0) * 0.8)}
+                            </div>
+                            <div className="text-xs text-gray-600">Backlinks</div>
+                          </div>
+                          <div className="text-center p-2 bg-gray-50 rounded">
+                            <div className={`text-lg font-bold ${
+                              (client.lastAuditScore || 0) >= 80 ? 'text-green-600' : 'text-yellow-600'
+                            }`}>
+                              {Math.floor((client.lastAuditScore || 0) * 0.95)}
+                            </div>
+                            <div className="text-xs text-gray-600">UX</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-3 border-t">
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewClientDetails(client)}
+                            >
+                              View Details
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              Download Report
+                            </Button>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Next: {client.nextAuditDate ? formatDate(client.nextAuditDate) : 'Not scheduled'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {activeTab === "keywords" && (
           <div className="space-y-6">
             {/* Keywords Header */}
